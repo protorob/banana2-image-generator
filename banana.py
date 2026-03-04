@@ -76,13 +76,17 @@ def save_generated_images(response) -> list[Path]:
 # Main generation logic
 # ---------------------------------------------------------------------------
 
-def generate_labels(prompt: str, count: int = 1) -> list[Path]:
+def generate_labels(prompt: str, count: int = 1, ignore_reference: bool = False) -> list[Path]:
     print("\n--- Loading reference images ---")
-    ref_images = load_reference_images()
-    if ref_images:
-        print(f"Found {len(ref_images)} reference image(s).")
+    if ignore_reference:
+        ref_images = []
+        print("Ignoring reference images (--no-reference).")
     else:
-        print("No reference images found — running from prompt only.")
+        ref_images = load_reference_images()
+        if ref_images:
+            print(f"Found {len(ref_images)} reference image(s).")
+        else:
+            print("No reference images found — running from prompt only.")
 
     # Build contents: optional reference images + text prompt
     contents = []
@@ -155,6 +159,11 @@ Examples:
         metavar="N",
         help="Number of images to generate (default: 1).",
     )
+    parser.add_argument(
+        "--no-reference",
+        action="store_true",
+        help="Ignore reference images even if they exist in reference/.",
+    )
     args = parser.parse_args()
 
     prompt_file = Path("prompt.txt")
@@ -170,7 +179,7 @@ Examples:
         user_input = input("Prompt> ").strip()
         prompt = user_input if user_input else DEFAULT_PROMPT
 
-    generate_labels(prompt, count=args.count)
+    generate_labels(prompt, count=args.count, ignore_reference=args.no_reference)
 
 
 if __name__ == "__main__":
